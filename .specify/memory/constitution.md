@@ -1,55 +1,59 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!-- SYNC IMPACT REPORT
+Version change: — (initial) → 1.0.0
+Modified principles (old title → new title):
+  [PRINCIPLE_1_NAME] → I. Tenant Isolation (NON-NEGOTIABLE)
+  [PRINCIPLE_2_NAME] → II. Security & Access Control
+  [PRINCIPLE_3_NAME] → III. Layered Architecture
+  [PRINCIPLE_4_NAME] → IV. Test-First Quality
+  [PRINCIPLE_5_NAME] → V. API Standards
+Added sections:
+  Section 2: VI. Performance & Data Integrity + VII. Observability
+  Section 3: VIII. Workflow Rules
+Removed sections: none
+Templates requiring updates:
+  ✅ .specify/templates/plan-template.md — "Constitution Check" placeholder remains generic; no changes needed for v1.0.0
+  ✅ .specify/templates/spec-template.md — no mandatory constitution sections referenced in template; no changes needed
+  ✅ .specify/templates/tasks-template.md — task categorization is generic; no changes needed
+  ✅ .specify/templates/adr-template.md — no constitution references in template; no changes needed
+  ✅ .specify/templates/checklist-template.md — no constitution references in template; no changes needed
+  ✅ .specify/templates/agent-file-template.md — no constitution references in template; no changes needed
+  ✅ .specify/templates/phr-template.prompt.md — no constitution references in template; no changes needed
+Follow-up TODOs: None — all placeholders resolved.
+-->
+
+# TenantFlow Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Tenant Isolation (NON-NEGOTIABLE)
+Every tenant-owned table MUST have `tenant_id` NOT NULL, indexed, and included in composite unique constraints. Tenancy model: shared database, shared schema, one `tenant_id` per row. `tenant_id` comes ONLY from the verified JWT/server context, never from request bodies, query params, or URLs. All database access goes through one tenant-scoped repository layer; no raw queries that skip the tenant filter. PostgreSQL Row-Level Security is enabled as a second line of defense. Redis keys, cache entries, WebSocket channels, file paths, and background jobs MUST be namespaced by tenant. A resource in another tenant returns 404, never 403. Every endpoint MUST have a cross-tenant access test that proves isolation.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Security & Access Control
+JWT access + refresh tokens; claims carry user_id, tenant_id, role. RBAC (owner, admin, project manager, member, viewer) MUST be enforced server-side on every endpoint; the frontend is never trusted for permissions. Passwords hashed with bcrypt/argon2. No secrets in code; env vars only. Rate limiting per tenant and per user. All create/update/delete actions write to an audit log (who, what, when, tenant). Auth, tenancy, and permission code MUST be reviewed by a human before merge.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Layered Architecture
+Router -> Service -> Repository with no business logic in routers and no HTTP concerns in services. Pydantic schemas at every API boundary; ORM models are never exposed directly. Database changes only via Alembic migrations; schema is never edited by hand. Async/await end to end.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Test-First Quality
+Tests MUST be written before implementation for auth, tenancy, and RBAC. pytest with unit tests for services and integration tests for endpoints. A feature is not done until its tests pass, including permission-denied and cross-tenant cases.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. API Standards
+Versioned under `/api/v1`; OpenAPI docs always accurate. Consistent error format. Pagination is mandatory on every list endpoint. All input validated; fail with clear, safe error messages.
 
-### [PRINCIPLE_6_NAME]
+## VI. Performance & Data Integrity
 
+Indexes lead with `tenant_id` (e.g., `(tenant_id, project_id, status)`). No N+1 queries; use eager loading or explicit joins. Transactions for multi-step writes. Soft-delete where history matters.
 
-[PRINCIPLE__DESCRIPTION]
+## VII. Observability
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Structured JSON logs with `request_id`, `tenant_id`, `user_id`. Health check endpoint. Errors are never silently swallowed.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+## VIII. Workflow Rules
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+No code without an approved spec, plan, and tasks. Small, reviewable tasks; one concern per change. Definition of Done: tests pass, migration included, docs updated, no cross-tenant leaks, reviewed.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Constitution supersedes all other practices. Amendments require documentation, approval, and a migration plan. All PRs/reviews MUST verify compliance with these principles. Complexity must be justified. Use `CLAUDE.md` for runtime development guidance. Version changes follow semantic versioning: MAJOR for backward-incompatible principle removals or redefinitions, MINOR for new or materially expanded sections, PATCH for non-semantic clarifications. Auth, tenancy, and permission code requires human review before merge.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-24 | **Last Amended**: 2026-10-24
