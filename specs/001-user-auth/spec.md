@@ -146,7 +146,7 @@ A user who belongs to multiple workspaces switches between them to access each w
 - **FR-010**: System MUST allow invitees to accept an invite, set a password, and join the workspace.
 - **FR-011**: System MUST prevent acceptance of expired or already-used invites.
 - **FR-012**: System MUST allow Owners and Admins to change a member's role.
-- **FR-013**: System MUST allow Owners and Admins to remove members, with immediate revocation of access.
+- **FR-013**: System MUST allow Owners and Admins to remove members, with immediate revocation of access via a short revocation window.
 - **FR-014**: System MUST prevent demotion or removal of the last Owner in a workspace.
 - **FR-015**: System MUST record role changes and member removals in an audit log.
 - **FR-016**: System MUST allow users to request a password reset link via email.
